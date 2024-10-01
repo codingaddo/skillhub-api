@@ -6,6 +6,7 @@ const mongoSanitize = require("express-mongo-sanitize");
 const cors = require("cors");
 const userRouter = require("./routes/userRoute");
 const businessRouter = require("./routes/businessRouter");
+const serviceRouter = require("./routes/serviceRoute");
 
 app.use((req, res, next) => {
   console.log("hello from the middleware");
@@ -24,5 +25,6 @@ app.use(mongoSanitize());
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/business", businessRouter);
+app.use("/api/v1/service", serviceRouter);
 
 module.exports = app;

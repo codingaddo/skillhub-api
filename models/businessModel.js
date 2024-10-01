@@ -1,7 +1,7 @@
 // models/Business.js
 const mongoose = require("mongoose");
+const Service = require("./serviceModel");
 
-// Create Business Schema
 const BusinessSchema = new mongoose.Schema({
   businessName: {
     type: String,
@@ -31,10 +31,24 @@ const BusinessSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  services: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Service",
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
 
+// Pre-delete middleware to remove associated services
+BusinessSchema.pre("findOneAndDelete", async function (next) {
+  const businessId = this.getFilter()._id; // Get the business ID from the filter
+  if (businessId) {
+    await Service.deleteMany({ business: businessId }); // Delete services with the matching business ID
+  }
+  next();
+});
 module.exports = mongoose.model("Business", BusinessSchema);
