@@ -24,11 +24,32 @@ exports.createBusiness = async (req, res) => {
   }
 };
 
+// exports.getAll = async (req, res) => {
+//   try {
+//     const businesses = await Business.find()
+//       .populate("owner")
+//       .populate("services");
+
+//     if (businesses.length === 0) {
+//       return res.status(404).json({ message: "No businesses found" });
+//     }
+
+//     res.status(200).json(businesses);
+//   } catch (err) {
+//     res.status(500).json({ error: "Server Error" });
+//   }
+// };
+
 exports.getAll = async (req, res) => {
   try {
     const businesses = await Business.find()
       .populate("owner")
-      .populate("services");
+      .populate({
+        path: "services",
+        match: {
+          isVerified: true,
+        }, // Only populate services that are verified
+      });
 
     if (businesses.length === 0) {
       return res.status(404).json({ message: "No businesses found" });

@@ -19,6 +19,10 @@ const ServiceSchema = new mongoose.Schema({
     ref: "Business",
     required: true,
   },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports = mongoose.model("Service", ServiceSchema);
