@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const app = express();
 const cookieparser = require("cookie-parser");
 const bodyParser = require("body-parser");
@@ -22,6 +23,7 @@ app.options("*", cors());
 app.use(express.json());
 app.use(cookieparser());
 app.use(mongoSanitize());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 ///Mounting routers
 
