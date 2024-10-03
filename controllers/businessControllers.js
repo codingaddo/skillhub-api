@@ -44,12 +44,13 @@ exports.getAll = async (req, res) => {
   try {
     const businesses = await Business.find()
       .populate("owner")
-      .populate({
-        path: "services",
-        match: {
-          isVerified: true,
-        }, // Only populate services that are verified
-      });
+      .populate("services");
+    // .populate({
+    //   path: "services",
+    //   match: {
+    //     isVerified: true,
+    //   }, // Only populate services that are verified
+    // });
 
     if (businesses.length === 0) {
       return res.status(404).json({ message: "No businesses found" });
