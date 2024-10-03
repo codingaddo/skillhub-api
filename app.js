@@ -7,6 +7,8 @@ const cors = require("cors");
 const userRouter = require("./routes/userRoute");
 const businessRouter = require("./routes/businessRouter");
 const serviceRouter = require("./routes/serviceRoute");
+const chatRouter = require("./routes/chatRoute");
+const messageRouter = require("./routes/messageRoute");
 
 app.use((req, res, next) => {
   console.log("hello from the middleware");
@@ -26,5 +28,7 @@ app.use(mongoSanitize());
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/business", businessRouter);
 app.use("/api/v1/service", serviceRouter);
+app.use("/api/v1/chat", chatRouter);
+app.use("/api/v1/message", messageRouter);
 
 module.exports = app;
