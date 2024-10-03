@@ -17,8 +17,7 @@
     "xss-clean": "^0.1.4"
   },
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "nodemon server.js"
   },
   "name": "skillhub-api",
   "version": "1.0.0",
