@@ -1,6 +1,25 @@
 const Service = require("../models/serviceModel");
 const Business = require("../models/businessModel");
 
+// module.exports.createService = async (req, res) => {
+//   try {
+//     const { category, skill, images } = req.body;
+//     const businessId = req.params.businessId;
+
+//     // Create a new service instance
+//     const service = await Service.create({
+//       category,
+//       skill,
+//       images,
+//       business: businessId,
+//     });
+
+//     res.status(201).json(service);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 module.exports.createService = async (req, res) => {
   try {
     const { category, skill, images } = req.body;
@@ -14,12 +33,20 @@ module.exports.createService = async (req, res) => {
       business: businessId,
     });
 
+    // Find the business and push the service ID into the services array
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ error: "Business not found" });
+    }
+
+    business.services.push(service._id);
+    await business.save();
+
     res.status(201).json(service);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
 module.exports.verifyService = async (req, res) => {
   try {
     const { serviceId } = req.params;
