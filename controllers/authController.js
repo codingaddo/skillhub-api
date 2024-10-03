@@ -45,22 +45,22 @@ exports.signup = catchAsync(async (req, res, next) => {
     role: req.body.role,
   });
 
-  // const transporter = nodemailer.createTransport({
-  //   service: "gmail",
-  //   auth: {
-  //     user: process.env.EMAIL_FROM,
-  //     pass: process.env.EMAIL_PASS,
-  //   },
-  // });
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_FROM,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
 
-  // const email = transporter.sendMail({
-  //   from: `Emergency Reporting System <${process.env.EMAIL_FROM}>`,
-  //   to: newUser.email,
-  //   subject: "Welcome Message",
-  //   text: "Hello world",
-  //   html: "<b>Hello World</b>",
-  // });
-  // console.log("Email Sent");
+  const email = transporter.sendMail({
+    from: `SkillHub <${process.env.EMAIL_FROM}>`,
+    to: newUser.email,
+    subject: "Welcome Message",
+    text: "Welcome to SkillHub, enjoy your stay",
+    html: "<b>Welcome to SkillHub, enjoy your stay</b>",
+  });
+  console.log("Email Sent");
 
   createSendToken(newUser, 201, req, res);
 
@@ -173,9 +173,8 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   try {
-    const resetUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/api/v1/users/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    console.log(process.env.FRONTEND_URL);
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -186,13 +185,32 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     });
     console.log(resetUrl);
 
-    //   const email = await transporter.sendMail({
-    //     from: `Emergency Reporting System <${process.env.EMAIL_FROM}>`,
-    //     to: user.email,
-    //     subject: "Password Reset Toke",
-    //     text: `Your password reset token, click on this👉 ${resetUrl} link to reset  your password,(valid for 10mins)`,
-    //     html: `<p>Your password reset token, click on this👉 <a>${resetUrl}</a> link to reset  your password,(valid for 10mins)</p>`,
-    //   });
+    const email = await transporter.sendMail({
+      from: `SkillHub <${process.env.EMAIL_FROM}>`,
+      to: user.email,
+      subject: "Password Reset Toke",
+      text: `Your password reset token, click on this👉 ${resetUrl} link to reset  your password,(valid for 10mins)`,
+      html: `
+    <p>Your password reset token is ready. Please click on the link below to reset your password:</p>
+    <a href="${resetUrl}" target="_blank">${resetUrl}</a>
+    <br /><br />
+    <p>Or, click the button below to reset your password:</p>
+    <a href="${resetUrl}" target="_blank" 
+       style="
+         background-color: #007bff;
+         color: white;
+         padding: 10px 20px;
+         text-decoration: none;
+         border-radius: 5px;
+         display: inline-block;
+       "
+    >
+      Reset Password
+    </a>
+    <br /><br />
+    <p>This link will be valid for 10 minutes.</p>
+  `,
+    });
     console.log("Password reset token Sent");
 
     res.status(200).json({
