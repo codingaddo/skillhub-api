@@ -5,11 +5,66 @@ const catchAsync = require("../utils/catchAsync");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 
-const signToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
-  });
-};
+// const signToken = (id) => {
+//   return jwt.sign({ id }, process.env.JWT_SECRET, {
+//     expiresIn: process.env.JWT_EXPIRES_IN,
+//   });
+// };
+
+// const createSendToken = (user, statusCode, req, res) => {
+//   const token = signToken(user._id);
+//   const cookieOptions = {
+//     expires: new Date(
+//       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+//     ),
+//     httpOnly: true,
+//   };
+
+//   if (process.env.NODE_ENV === "production") {
+//     cookieOptions.secure = true;
+//   }
+
+//   res.cookie("jwt", token, cookieOptions);
+//   user.password = undefined;
+//   res.status(statusCode).json({
+//     status: "success",
+//     token,
+//     data: {
+//       user,
+//     },
+//   });
+// };
+
+// exports.signup = catchAsync(async (req, res, next) => {
+//   const newUser = await User.create({
+//     fullName: req.body.fullName,
+//     email: req.body.email,
+//     phone: req.body.phone,
+//     password: req.body.password,
+//     confirmPassword: req.body.confirmPassword,
+//     role: req.body.role,
+//   });
+
+//   const transporter = nodemailer.createTransport({
+//     service: "gmail",
+//     auth: {
+//       user: process.env.EMAIL_FROM,
+//       pass: process.env.EMAIL_PASS,
+//     },
+//   });
+
+//   const email = transporter.sendMail({
+//     from: `SkillHub <${process.env.EMAIL_FROM}>`,
+//     to: newUser.email,
+//     subject: "Welcome Message",
+//     text: "Welcome to SkillHub, enjoy your stay",
+//     html: "<b>Welcome to SkillHub, enjoy your stay</b>",
+//   });
+//   console.log("Email Sent");
+
+//   createSendToken(newUser, 201, req, res);
+
+// });
 
 const createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
@@ -25,7 +80,8 @@ const createSendToken = (user, statusCode, req, res) => {
   }
 
   res.cookie("jwt", token, cookieOptions);
-  user.password = undefined;
+  user.password = undefined; // remove password from output
+
   res.status(statusCode).json({
     status: "success",
     token,
@@ -36,37 +92,52 @@ const createSendToken = (user, statusCode, req, res) => {
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
-  const newUser = await User.create({
-    fullName: req.body.fullName,
-    email: req.body.email,
-    phone: req.body.phone,
-    password: req.body.password,
-    confirmPassword: req.body.confirmPassword,
-    role: req.body.role,
-  });
+  try {
+    const newUser = await User.create({
+      fullName: req.body.fullName,
+      email: req.body.email,
+      phone: req.body.phone,
+      password: req.body.password,
+      confirmPassword: req.body.confirmPassword,
+      role: req.body.role,
+    });
 
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_FROM,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_FROM,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
-  const email = transporter.sendMail({
-    from: `SkillHub <${process.env.EMAIL_FROM}>`,
-    to: newUser.email,
-    subject: "Welcome Message",
-    text: "Welcome to SkillHub, enjoy your stay",
-    html: "<b>Welcome to SkillHub, enjoy your stay</b>",
-  });
-  console.log("Email Sent");
+    const email = transporter.sendMail({
+      from: `SkillHub <${process.env.EMAIL_FROM}>`,
+      to: newUser.email,
+      subject: "Welcome Message",
+      text: "Welcome to SkillHub, enjoy your stay",
+      html: "<b>Welcome to SkillHub, enjoy your stay</b>",
+    });
 
-  createSendToken(newUser, 201, req, res);
+    console.log("Email Sent");
+    createSendToken(newUser, 201, req, res);
+  } catch (err) {
+    // Handle duplicate key error
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyValue)[0]; // get the duplicate field (e.g., email or phone)
+      const value = err.keyValue[field]; // get the value of the duplicate key
 
-  //   res.status(201).json({
-  //     status: "success",
-  //   });
+      return res.status(400).json({
+        status: "fail",
+        message: `${field} '${value}' already exists. Please use another ${field}.`,
+      });
+    }
+
+    // For other errors, send a generic response
+    res.status(500).json({
+      status: "error",
+      message: "Something went wrong. Please try again.",
+    });
+  }
 });
 
 exports.login = catchAsync(async (req, res, next) => {
