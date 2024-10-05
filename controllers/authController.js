@@ -5,66 +5,11 @@ const catchAsync = require("../utils/catchAsync");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 
-// const signToken = (id) => {
-//   return jwt.sign({ id }, process.env.JWT_SECRET, {
-//     expiresIn: process.env.JWT_EXPIRES_IN,
-//   });
-// };
-
-// const createSendToken = (user, statusCode, req, res) => {
-//   const token = signToken(user._id);
-//   const cookieOptions = {
-//     expires: new Date(
-//       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-//     ),
-//     httpOnly: true,
-//   };
-
-//   if (process.env.NODE_ENV === "production") {
-//     cookieOptions.secure = true;
-//   }
-
-//   res.cookie("jwt", token, cookieOptions);
-//   user.password = undefined;
-//   res.status(statusCode).json({
-//     status: "success",
-//     token,
-//     data: {
-//       user,
-//     },
-//   });
-// };
-
-// exports.signup = catchAsync(async (req, res, next) => {
-//   const newUser = await User.create({
-//     fullName: req.body.fullName,
-//     email: req.body.email,
-//     phone: req.body.phone,
-//     password: req.body.password,
-//     confirmPassword: req.body.confirmPassword,
-//     role: req.body.role,
-//   });
-
-//   const transporter = nodemailer.createTransport({
-//     service: "gmail",
-//     auth: {
-//       user: process.env.EMAIL_FROM,
-//       pass: process.env.EMAIL_PASS,
-//     },
-//   });
-
-//   const email = transporter.sendMail({
-//     from: `SkillHub <${process.env.EMAIL_FROM}>`,
-//     to: newUser.email,
-//     subject: "Welcome Message",
-//     text: "Welcome to SkillHub, enjoy your stay",
-//     html: "<b>Welcome to SkillHub, enjoy your stay</b>",
-//   });
-//   console.log("Email Sent");
-
-//   createSendToken(newUser, 201, req, res);
-
-// });
+const signToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN,
+  });
+};
 
 const createSendToken = (user, statusCode, req, res) => {
   const token = signToken(user._id);
@@ -80,8 +25,7 @@ const createSendToken = (user, statusCode, req, res) => {
   }
 
   res.cookie("jwt", token, cookieOptions);
-  user.password = undefined; // remove password from output
-
+  user.password = undefined;
   res.status(statusCode).json({
     status: "success",
     token,
@@ -90,6 +34,80 @@ const createSendToken = (user, statusCode, req, res) => {
     },
   });
 };
+
+// exports.signup = catchAsync(async (req, res, next) => {
+//   try {
+//     const newUser = await User.create({
+//       fullName: req.body.fullName,
+//       email: req.body.email,
+//       phone: req.body.phone,
+//       password: req.body.password,
+//       confirmPassword: req.body.confirmPassword,
+//       role: req.body.role,
+//     });
+
+//     createSendToken(newUser, 201, req, res);
+
+//     // Email sending happens after the response is sent to the client
+//     const transporter = nodemailer.createTransport({
+//       service: "gmail",
+//       auth: {
+//         user: process.env.EMAIL_FROM,
+//         pass: process.env.EMAIL_PASS,
+//       },
+//     });
+
+//     transporter.sendMail(
+//       {
+//         from: `SkillHub <${process.env.EMAIL_FROM}>`,
+//         to: newUser.email,
+//         subject: "Welcome Message",
+//         text: "Welcome to SkillHub, enjoy your stay",
+//         html: "<b>Welcome to SkillHub, enjoy your stay</b>",
+//       },
+//       (error, info) => {
+//         if (error) {
+//           console.error("Error sending email:", error);
+//         } else {
+//           console.log("Email sent:", info.response);
+//         }
+//       }
+//     );
+//   } catch (err) {
+//     console.error("Signup error:", err); // Log the error to understand what is wrong
+//     next(err); // Pass error to the error-handling middleware
+//   }
+// });
+
+exports.signup = catchAsync(async (req, res, next) => {
+  const newUser = await User.create({
+    fullName: req.body.fullName,
+    email: req.body.email,
+    phone: req.body.phone,
+    password: req.body.password,
+    confirmPassword: req.body.confirmPassword,
+    role: req.body.role,
+  });
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_FROM,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  const email = transporter.sendMail({
+    from: `SkillHub <${process.env.EMAIL_FROM}>`,
+    to: newUser.email,
+    subject: "Welcome Message",
+    text: "Welcome to SkillHub, enjoy your stay",
+    html: "<b>Welcome to SkillHub, enjoy your stay</b>",
+  });
+  console.log("Email Sent");
+
+  createSendToken(newUser, 201, req, res);
+});
 
 exports.signup = catchAsync(async (req, res, next) => {
   try {
@@ -120,6 +138,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
     console.log("Email Sent");
     createSendToken(newUser, 201, req, res);
+    next();
   } catch (err) {
     // Handle duplicate key error
     if (err.code === 11000) {
@@ -135,7 +154,8 @@ exports.signup = catchAsync(async (req, res, next) => {
     // For other errors, send a generic response
     res.status(500).json({
       status: "error",
-      message: "Something went wrong. Please try again.",
+      // message: "Something went wrong. Please try again.",
+      error: err.message,
     });
   }
 });
