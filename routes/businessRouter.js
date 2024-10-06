@@ -15,6 +15,7 @@ const { createService } = require("../controllers/serviceController");
 router
   .route("/create")
   .post(protect, restrictTo("artesan", "admin"), createBusiness);
+// .post(protect, restrictTo("artesan", "admin"), createBusiness);
 router.route("/").get(getAll);
 router.route("/my-business").get(protect, getMyBusiness);
 router
