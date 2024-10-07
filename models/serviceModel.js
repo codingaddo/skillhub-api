@@ -19,6 +19,11 @@ const ServiceSchema = new mongoose.Schema({
     ref: "Business",
     required: true,
   },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   isVerified: {
     type: Boolean,
     default: false,

@@ -11,6 +11,8 @@ const serviceRouter = require("./routes/serviceRoute");
 const chatRouter = require("./routes/chatRoute");
 const messageRouter = require("./routes/messageRoute");
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 app.use((req, res, next) => {
   console.log("hello from the middleware");
   req.requesTime = new Date().toISOString();
@@ -31,7 +33,6 @@ app.options("*", cors());
 app.use(express.json());
 app.use(cookieparser());
 app.use(mongoSanitize());
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 ///Mounting routers
 

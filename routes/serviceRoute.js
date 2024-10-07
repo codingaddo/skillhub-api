@@ -10,7 +10,10 @@ const {
   getAllService,
   deleteService,
   deleteServiceByowner,
+  getService,
 } = require("../controllers/serviceController");
+
+router.route("/:id").get(getService);
 
 router
   .route("/:id")

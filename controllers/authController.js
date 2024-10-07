@@ -264,7 +264,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   try {
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL}/${resetToken}`;
     console.log(process.env.FRONTEND_URL);
 
     const transporter = nodemailer.createTransport({
@@ -279,7 +279,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     const email = await transporter.sendMail({
       from: `SkillHub <${process.env.EMAIL_FROM}>`,
       to: user.email,
-      subject: "Password Reset Toke",
+      subject: "Password Reset Token",
       text: `Your password reset token, click on this👉 ${resetUrl} link to reset  your password,(valid for 10mins)`,
       html: `
     <p>Your password reset token is ready. Please click on the link below to reset your password:</p>

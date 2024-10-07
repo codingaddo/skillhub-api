@@ -94,6 +94,7 @@ module.exports.createService = async (req, res) => {
     try {
       const { category, skill } = req.body;
       const businessId = req.params.businessId;
+      const serviceOwner = req.user._id;
 
       // Process the uploaded images and construct the image URLs
       const imageUrls = req.files.map((file) => {
@@ -106,6 +107,7 @@ module.exports.createService = async (req, res) => {
         skill,
         images: imageUrls,
         business: businessId,
+        owner: serviceOwner, // Set the owner of the service as the authenticated user
       });
 
       // Find the business and push the service ID into the services array
@@ -228,5 +230,37 @@ exports.deleteService = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get Service by ID
+exports.getService = async (req, res, next) => {
+  try {
+    const { id } = req.params; // Get the service ID from the request parameters
+
+    // Find the service by ID and populate the associated business
+    const service = await Service.findById(id).populate("business");
+
+    // If no service found, return a 404 error
+    if (!service) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Service not found",
+      });
+    }
+
+    // Return the found service
+    res.status(200).json({
+      status: "success",
+      data: {
+        service,
+      },
+    });
+  } catch (err) {
+    // Handle any errors (e.g., invalid ID format, database issues)
+    res.status(500).json({
+      status: "fail",
+      message: err.message || "Server Error",
+    });
   }
 };
