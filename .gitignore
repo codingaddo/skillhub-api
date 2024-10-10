@@ -1,4 +1,4 @@
 /node_modules
 *.env
 /models/db.json
-/models/db
+/models/db/admin.json
