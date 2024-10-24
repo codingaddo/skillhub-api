@@ -12,6 +12,9 @@ const {
 const { protect, restrictTo } = require("../controllers/authController");
 const { createService } = require("../controllers/serviceController");
 
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
+
 router
   .route("/create")
   .post(protect, restrictTo("artesan", "admin"), createBusiness);
@@ -27,6 +30,11 @@ router
 
 router
   .route("/:businessId/service")
-  .post(protect, restrictTo("artesan", "admin"), createService);
+  .post(
+    protect,
+    restrictTo("artesan", "admin"),
+    upload.array("images", 5),
+    createService
+  );
 
 module.exports = router;
