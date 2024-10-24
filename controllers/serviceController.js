@@ -1,14 +1,88 @@
+// const Service = require("../models/serviceModel");
+// const Business = require("../models/businessModel");
+// var admin = require("firebase-admin");
+// var path = require("path");
+
+// var serviceAccount = require("../models/db/admin.json");
+
+// admin.initializeApp({
+//   credential: admin.credential.cert(serviceAccount),
+//   storageBucket: 'gs://skill-hub-fd319.appspot.com'
+// });
+
+// const bucket = admin.storage().bucket();
+
+// module.exports.createService = async (req, res) => {
+//   try {
+//     const { category, skill } = req.body;
+//     const businessId = req.params.businessId;
+//     const serviceOwner = req.user._id;
+
+//     // Check if files are uploaded
+//     if (!req.files || req.files.length === 0) {
+//       return res.status(400).json({ error: "No images provided" });
+//     }
+
+//     const imageUrls = [];
+
+//     // Loop through each uploaded file and upload to Firebase Storage
+//     for (const file of req.files) {
+//       const filename = `${businessId}-${path.parse(file.originalname).name}-${Date.now()}${path.extname(file.originalname)}`;
+
+//       // Upload file to Firebase Storage
+//       const uploadToFirebase = await bucket.upload(file.path, {
+//         destination: `uploads/images/${filename}`,
+//         public: true,
+//         metadata: {
+//           contentType: file.mimetype,
+//         },
+//       });
+
+//       // Get public URL of the uploaded file
+//       const fileUrl = uploadToFirebase[0].metadata.mediaLink;
+//       imageUrls.push(fileUrl);
+//     }
+
+//     // Create a new service instance with uploaded image URLs
+//     const service = await Service.create({
+//       category,
+//       skill,
+//       images: imageUrls,
+//       business: businessId,
+//       owner: serviceOwner,
+//     });
+
+//     // Find the business and add the service ID to its services array
+//     const business = await Business.findById(businessId);
+//     if (!business) {
+//       return res.status(404).json({ error: "Business not found" });
+//     }
+
+//     business.services.push(service._id);
+//     await business.save();
+
+//     res.status(201).json(service);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 const Service = require("../models/serviceModel");
 const Business = require("../models/businessModel");
 var admin = require("firebase-admin");
 var path = require("path");
+var fs = require("fs");
 
+// Firebase Admin SDK setup
 var serviceAccount = require("../models/db/admin.json");
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  storageBucket: 'gs://skill-hub-fd319.appspot.com'
-});
+if (!admin.apps.length) {
+  // Prevent reinitialization
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: "gs://skill-hub-fd319.appspot.com",
+  });
+}
 
 const bucket = admin.storage().bucket();
 
@@ -27,20 +101,32 @@ module.exports.createService = async (req, res) => {
 
     // Loop through each uploaded file and upload to Firebase Storage
     for (const file of req.files) {
-      const filename = `${businessId}-${path.parse(file.originalname).name}-${Date.now()}${path.extname(file.originalname)}`;
+      const filename = `${businessId}-${
+        path.parse(file.originalname).name
+      }-${Date.now()}${path.extname(file.originalname)}`;
 
-      // Upload file to Firebase Storage
-      const uploadToFirebase = await bucket.upload(file.path, {
-        destination: `uploads/images/${filename}`,
-        public: true,
-        metadata: {
-          contentType: file.mimetype,
-        },
-      });
+      try {
+        // Upload file to Firebase Storage
+        const uploadToFirebase = await bucket.upload(file.path, {
+          destination: `uploads/images/${filename}`,
+          public: true,
+          metadata: {
+            contentType: file.mimetype,
+          },
+        });
 
-      // Get public URL of the uploaded file
-      const fileUrl = uploadToFirebase[0].metadata.mediaLink;
-      imageUrls.push(fileUrl);
+        // Get public URL of the uploaded file
+        const fileUrl = `https://storage.googleapis.com/${bucket.name}/${uploadToFirebase[0].name}`;
+        imageUrls.push(fileUrl);
+
+        // Optional: Delete the local file after upload
+        fs.unlinkSync(file.path);
+      } catch (err) {
+        console.error("Firebase upload error:", err);
+        return res
+          .status(500)
+          .json({ error: "Failed to upload image to Firebase" });
+      }
     }
 
     // Create a new service instance with uploaded image URLs
@@ -108,7 +194,6 @@ exports.deleteServiceByowner = async (req, res) => {
   try {
     const { serviceId } = req.params;
 
-
     const service = await Service.findById(serviceId);
 
     if (!service) {
@@ -144,13 +229,11 @@ exports.deleteService = async (req, res) => {
   try {
     const { serviceId } = req.params;
 
-
     const service = await Service.findById(serviceId);
 
     if (!service) {
       return res.status(404).json({ message: "Service not found" });
     }
-
 
     await Service.findByIdAndDelete(serviceId);
 
@@ -169,14 +252,11 @@ exports.deleteService = async (req, res) => {
   }
 };
 
-
 exports.getService = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-
     const service = await Service.findById(id).populate("business");
-
 
     if (!service) {
       return res.status(404).json({
@@ -185,7 +265,6 @@ exports.getService = async (req, res, next) => {
       });
     }
 
-
     res.status(200).json({
       status: "success",
       data: {
@@ -193,7 +272,6 @@ exports.getService = async (req, res, next) => {
       },
     });
   } catch (err) {
-
     res.status(500).json({
       status: "fail",
       message: err.message || "Server Error",
